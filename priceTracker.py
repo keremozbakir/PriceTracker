@@ -2,6 +2,7 @@ import urllib.request
 import bs4 as bs
 import email_to
 from pymongo import MongoClient
+import re
 
 # connection to cluster
 cluster = MongoClient(
@@ -149,7 +150,18 @@ def price_check():
             nav = soup.body
             for div in nav.find_all('span', class_='a-size-medium a-color-price priceBlockBuyingPriceString'):
                 price = div.get_text()
-                price = int(price[1:4])
+                #price = int(price[1:4])
+                kerem = re.findall('€[0-9]+[,]?[0-9]+', price)
+                newlist = []
+                for i in kerem:
+                    for x in i:
+                        if x != ',':
+                            newlist.append(x)
+                #print('demene 1 ',newlist)
+                newprice = "".join(newlist)
+                newprice = newprice[1:]
+                price = int(newprice)
+                #print('deneme new price:',newprice)
 
                 if price <= int(obj['target_price']):
                     print(int(obj['target_price']))
