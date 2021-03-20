@@ -25,7 +25,7 @@ def send_email():
 
 # function to add new product to database
 def new_product():
-    seller = input('please enter the website name such as otto,mediamarkt,zara,amazon,hnm : ')
+    seller = input('please enter the website name such as otto,zara,amazon,hnm : ')
     urlmiz = input('please paste the url of the product: ')
     product_name = input('what would you like to call the product? : ')
     target_price = input('at what price would you like to get notified? : ')
@@ -46,12 +46,12 @@ def new_product():
 
 def see_collection():
     for obj in collection.find({}):
-        print(obj['seller_name'], obj['product_name'], 'expected price => ', obj['target_price'], 'EU')
+        print(obj['seller_name'], obj['product_name'])
 
+        print('expected price => ', obj['target_price'], 'EU')
+        print('############################################')
 
 ##running db queries to seek the prices
-# burada db icinde aratarak otto ise sunu yap media markt ise sunu yap demek lazim
-
 
 def price_check():
     for obj in collection.find({}):
@@ -62,14 +62,12 @@ def price_check():
             nav = soup.body
             # print(nav)
 
-            for div in nav.find_all('span', id='oldPriceAmount'):
-                oldprice = div.get_text()
-                print('the old price is:', oldprice[:9])
+
 
             for div in nav.find_all('div', class_='prd_price__main js_prd_price__main'):
 
                 price = div.get_text()
-                print('the current price of the ', obj['product_name'], ' is:', price[:9])
+                #print('the current price of the ', obj['product_name'], ' is:', price[:9])
                 # print(price[3:6])
                 fiyat = int(price[3:6])
                 if fiyat < obj['target_price']:
@@ -77,7 +75,7 @@ def price_check():
                     print('##########################################')
                     # send_email()
                 else:
-                    print('the price', obj['product_name'], 'has not changed since')
+                    print('the price', obj['product_name'], 'is still same and it is ',fiyat)
                     print('##########################################')
 
         elif obj['seller_name'] == 'zara':
@@ -102,7 +100,7 @@ def price_check():
                     print('##########################################')
                     # send_email()
                 else:
-                    print('the price', obj['product_name'], 'has not changed since')
+                    print('the price', obj['product_name'], 'still same and it is ',price)
                     print('##########################################')
         elif obj['seller_name'] == 'hnm':
             url = obj['product_url']
@@ -123,12 +121,12 @@ def price_check():
                     price = str(i)
 
                     intprice = int(price[44:46])
-                    if intprice < obj['target_price']:
+                    if intprice > obj['target_price']:
                         print('the', obj['product_name'], 'is on sale!!')
                         print('##########################################')
                         # send_email()
                     else:
-                        print('the price', obj['product_name'], 'has not changed since')
+                        print('the price', obj['product_name'], 'has not changed since and it is ',price)
                         print('##########################################')
 
                     # print(price[44:51])
@@ -136,8 +134,37 @@ def price_check():
 
                     # print(len(price))
 
+        elif obj['seller_name'] == 'amazon':
+            url = obj['product_url']
+            req = urllib.request.Request(
+                url,
+                data=None,
+                headers={
+                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'
+                }
+            )
+
+            f = urllib.request.urlopen(req)
+            soup = bs.BeautifulSoup(f, 'lxml')
+            nav = soup.body
+            for div in nav.find_all('span', class_='a-size-medium a-color-price priceBlockBuyingPriceString'):
+                price = div.get_text()
+                price = int(price[1:4])
+
+                if price <= int(obj['target_price']):
+                    print(int(obj['target_price']))
+                    print('the', obj['product_name'], 'is on sale!!')
+                    print('price: ', price)
+                    print('##########################################')
+
+                    # send_email()
+                else:
+                    print('the price', obj['product_name'], 'still same and it is ',price)
+                    print('##########################################')
+
+
         else:
-            print('we only support zara and otto ...')
+            print('we only support zara,otto,hnm and amazon ...')
             print('#####################################')
 
 
