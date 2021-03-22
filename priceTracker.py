@@ -11,9 +11,51 @@ cluster = MongoClient(
 db = cluster["priceTracker"]
 collection = db["priceTracker"]
 
+#fiyat kismindan rakamlari cekmek icin
+
+def price_tag(price):
+    kerem = re.findall('[0-9]+[,]?[0-9]+', price)
+    newlist = []
+    for i in kerem:
+        for x in i:
+            if x != ',':
+                newlist.append(x)
+            elif x == ',':
+                newlist.append('.')
+    # print('demene 1 ',newlist)
+    newprice = "".join(newlist)
+    # newprice = newprice[1:]
+    price = float(newprice)
+    # price = int(price[3:6])
+    price_tag.tag = price
+
+
+
+##the process if there is a sale
+def sale_pozitiv(obj,actual_price):
+    print(obj['seller_name'], obj['product_name'], 'is on sale!! =>  ',actual_price)
+    print('##########################################')
+
+
+## passing User Agent in header to bypass error code 403
+def request(url):
+    req = urllib.request.Request(
+        url,
+        data=None,
+        headers={
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'
+        }
+    )
+
+    f = urllib.request.urlopen(req)
+    soup = bs.BeautifulSoup(f, 'lxml')
+
+    nav = soup.body
+    request.navi = soup.body
+
 
 # sending email as a third party with yahoo mail.
-def send_email():
+def send_email(urlmiz):
     server = email_to.EmailServer('smtp.mail.yahoo.com', 587, 'automessage6@yahoo.com', 'arnpkayviqxuiijk')
     print('login success ')
     message = 'emailto test!'
@@ -31,13 +73,14 @@ def new_product():
     product_name = input('what would you like to call the product? : ')
     target_price = input('at what price would you like to get notified? : ')
     target_price = int(target_price)
-
+    sale = 0
     # inserting to database by passing variables to a dictionary
     hashmap = {}
     hashmap["product_name"] = product_name
     hashmap["product_url"] = urlmiz
     hashmap["target_price"] = target_price
     hashmap["seller_name"] = seller
+    hashmap["sale"] = sale
     collection.insert_one(hashmap)
 
     print('successfully inserted to database')
@@ -52,6 +95,34 @@ def see_collection():
         print('expected price => ', obj['target_price'], 'EU')
         print('############################################')
 
+
+## function to delete the items that we have seen to be on sale
+def delete_sale():
+    delete_question = input('would you like to delete the items that are on sale ? :(y/n)')
+    if delete_question == 'y':
+        # print('here is the funktion to delete from database')
+        q2 = input('are you sure?:  y/n')
+        if q2 == 'y':
+            collection.delete_many({"sale": 1})
+            print('successfully deleted from database')
+
+    else:
+        print('dont do anything')
+
+
+# updates sale field on database
+def sale_update():
+    old_query = {"sale": 0}
+    new_query = {"$set": {"sale": 1}}
+    collection.update_one(old_query, new_query)
+
+
+# when there is no sale
+def sale_negativ(obj, price):
+    print(obj['seller_name'], obj['product_name'], 'still same => ', price)
+    print('##########################################')
+
+
 ##running db queries to seek the prices
 
 def price_check():
@@ -63,116 +134,73 @@ def price_check():
             nav = soup.body
             # print(nav)
 
-
-
             for div in nav.find_all('div', class_='prd_price__main js_prd_price__main'):
-
                 price = div.get_text()
-                #print('the current price of the ', obj['product_name'], ' is:', price[:9])
-                # print(price[3:6])
-                fiyat = int(price[3:6])
-                if fiyat < obj['target_price']:
-                    print('the', obj['product_name'], 'is on sale!!')
-                    print('##########################################')
-                    # send_email()
+                price_tag(price)
+                price = price_tag.tag
+                price = float(price)
+                if price < obj['target_price']:
+                    sale_pozitiv(obj,price)
+                    # send_email(urlmiz)
                 else:
-                    print('the price', obj['product_name'], 'is still same and it is ',fiyat)
-                    print('##########################################')
-
+                    sale_negativ(obj,price)
         elif obj['seller_name'] == 'zara':
             url = obj['product_url']
-            req = urllib.request.Request(
-                url,
-                data=None,
-                headers={
-                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'
-                }
-            )
-
-            f = urllib.request.urlopen(req)
-            soup = bs.BeautifulSoup(f, 'lxml')
-            nav = soup.body
+            request(url)
+            nav = request.navi
             for div in nav.find_all('span', class_='price__amount'):
                 price = div.get_text()
-                price = int(price[3:6])
+                price_tag(price)
+                price=price_tag.tag
+                price = float(price)
+                #price = int(price[3:6])
 
                 if price <= obj['target_price']:
-                    print('the', obj['product_name'], 'is on sale!!')
-                    print('##########################################')
+                    sale_update()
+                    sale_pozitiv(obj, price)
+
                     # send_email()
                 else:
-                    print('the price', obj['product_name'], 'still same and it is ',price)
-                    print('##########################################')
+                    sale_negativ(obj, price)
+                    #print('sale_negative funktion')
         elif obj['seller_name'] == 'hnm':
             url = obj['product_url']
-            req = urllib.request.Request(
-                url,
-                data=None,
-                headers={
-                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'
-                }
-            )
-
-            f = urllib.request.urlopen(req)
-            soup = bs.BeautifulSoup(f, 'lxml')
-            nav = soup.body
-
+            request(url)
+            nav = request.navi
             for div in nav.find_all('div', class_='primary-row product-item-price'):
-                for i in div.find_all('span'):
-                    price = str(i)
+                for div in div.find_all('span'):
+                    price = div.get_text()
+                    # price = int(price[1:4])
+                    price_tag(price)
+                    price = price_tag.tag
+                    price = float(price)
 
-                    intprice = int(price[44:46])
-                    if intprice > obj['target_price']:
-                        print('the', obj['product_name'], 'is on sale!!')
-                        print('##########################################')
-                        # send_email()
+                    if price <= int(obj['target_price']):
+
+                        sale_pozitiv(obj, price)
+
                     else:
-                        print('the price', obj['product_name'], 'has not changed since and it is ',price)
-                        print('##########################################')
+                        sale_negativ(obj,price)
+                # print(price[44:51])
+                # intprice = price[44:46]
 
-                    # print(price[44:51])
-                    # intprice = price[44:46]
-
-                    # print(len(price))
+                # print(len(price))
 
         elif obj['seller_name'] == 'amazon':
             url = obj['product_url']
-            req = urllib.request.Request(
-                url,
-                data=None,
-                headers={
-                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'
-                }
-            )
-
-            f = urllib.request.urlopen(req)
-            soup = bs.BeautifulSoup(f, 'lxml')
-            nav = soup.body
+            request(url)
+            nav = request.navi
             for div in nav.find_all('span', class_='a-size-medium a-color-price priceBlockBuyingPriceString'):
                 price = div.get_text()
-                #price = int(price[1:4])
-                kerem = re.findall('€[0-9]+[,]?[0-9]+', price)
-                newlist = []
-                for i in kerem:
-                    for x in i:
-                        if x != ',':
-                            newlist.append(x)
-                #print('demene 1 ',newlist)
-                newprice = "".join(newlist)
-                newprice = newprice[1:]
-                price = int(newprice)
-                #print('deneme new price:',newprice)
-
+                price_tag(price)
+                price = price_tag.tag
+                price = float(price)
                 if price <= int(obj['target_price']):
-                    print(int(obj['target_price']))
-                    print('the', obj['product_name'], 'is on sale!!')
-                    print('price: ', price)
-                    print('##########################################')
+                    sale_pozitiv(obj,price)
 
                     # send_email()
                 else:
-                    print('the price', obj['product_name'], 'still same and it is ',price)
-                    print('##########################################')
+                    sale_negativ(obj,price)
 
 
         else:
@@ -184,13 +212,19 @@ def price_check():
 print("to track a new product type 'add' to the console")
 print("to see if there is any discount type 'check' to the console")
 print("to see all your products type 'see' to the console")
-
+print("to delete the items which are on sale type 'delete' to the console")
 purpose = input('Please type your answer :')
 
 if purpose == 'add':
     new_product()
 
-if purpose == 'see':
+elif purpose == 'see':
     see_collection()
-if purpose == 'check':
+elif purpose == 'delete':
+
+    delete_sale()
+elif purpose == 'check':
+
     price_check()
+else:
+    print('unknown command')
