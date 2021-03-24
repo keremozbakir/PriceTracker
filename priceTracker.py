@@ -5,13 +5,14 @@ from pymongo import MongoClient
 import re
 
 # connection to cluster
+# Replace this string with your own connection string from Mongodb
 cluster = MongoClient(
-    "mongodb+srv://kerem4022:kerem4022@nodetuts.7fmw3.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
+    "mongodb+srv://username:password@nodetuts.7fmw3.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
 
 db = cluster["priceTracker"]
 collection = db["priceTracker"]
 
-#fiyat kismindan rakamlari cekmek icin
+
 
 def price_tag(price):
     kerem = re.findall('[0-9]+[,]?[0-9]+', price)
@@ -52,18 +53,6 @@ def request(url):
 
     nav = soup.body
     request.navi = soup.body
-
-
-# sending email as a third party with yahoo mail.
-def send_email(urlmiz):
-    server = email_to.EmailServer('smtp.mail.yahoo.com', 587, 'automessage6@yahoo.com', 'arnpkayviqxuiijk')
-    print('login success ')
-    message = 'emailto test!'
-    server.quick_email('orhank.ozbakir@gmail.com', 'TEST',
-                       ['acele et indirim var', urlmiz],
-                       style='h1 {color: blue}')
-
-    print('message has been sent!!')
 
 
 # function to add new product to database
