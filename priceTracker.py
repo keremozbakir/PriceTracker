@@ -4,9 +4,9 @@ import bs4 as bs
 
 from pymongo import MongoClient
 import re
-from DBConnection import cluster
-from DBConnection import db
-from DBConnection import collection
+from database_connection import cluster
+from database_connection import db
+from database_connection import collection
 # connection to cluster
 # Replace this string with your own connection string from Mongodb
 
