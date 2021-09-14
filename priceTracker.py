@@ -1,6 +1,6 @@
 import urllib.request
 import bs4 as bs
-#import email_to
+
 
 from pymongo import MongoClient
 import re
@@ -137,7 +137,7 @@ def price_check():
             url = obj['product_url']
             request(url)
             nav = request.navi
-            for div in nav.find_all('span', class_='price__amount'):
+            for div in nav.find_all('span', class_='price__amount-current', limit=1):
                 price = div.get_text()
                 price_tag(price)
                 price=price_tag.tag
