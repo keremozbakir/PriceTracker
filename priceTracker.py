@@ -7,8 +7,22 @@ import re
 from database_connection import cluster
 from database_connection import db
 from database_connection import collection
+
+
 # connection to cluster
-# Replace this string with your own connection string from Mongodb
+# Replace the variables with your own.
+# paste these in a new file called database_connection.py or do it here and delete line 7,8,9
+
+# cluster = MongoClient("your mongodb connection string")
+# db = cluster["name of database"]
+# collection = db["name of collection"]
+
+
+
+
+
+
+
 
 db = db
 cluster = cluster
