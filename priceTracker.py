@@ -1,18 +1,17 @@
 import urllib.request
 import bs4 as bs
-import email_to
+#import email_to
+
 from pymongo import MongoClient
 import re
-
+from DBConnection import cluster
+from DBConnection import db
+from DBConnection import collection
 # connection to cluster
 # Replace this string with your own connection string from Mongodb
-cluster = MongoClient(
-    "mongodb+srv://username:password@nodetuts.7fmw3.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
 
-db = cluster["priceTracker"]
-collection = db["priceTracker"]
-
-
+db = db
+cluster = cluster
 
 def price_tag(price):
     kerem = re.findall('[0-9]+[,]?[0-9]+', price)
@@ -83,7 +82,8 @@ def see_collection():
 
         print('expected price => ', obj['target_price'], 'EU')
         print('############################################')
-
+        if KeyError:
+            print("no data yet")
 
 ## function to delete the items that we have seen to be on sale
 def delete_sale():
