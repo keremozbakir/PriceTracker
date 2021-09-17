@@ -10,8 +10,7 @@ you should create a file named "database_connection.py" and define the imported 
 
 
 After these settings are done you need to go to target website  and copy a link of a product .Here is an example link you can use: https://www.otto.de/p/call-of-duty-modern-warfare-xbox-one-904656898/#variationId=904656899
-paste this link when it is asked.Then you will be asked a product name.Product name is the name you want to save the product in to mongodb database.it can be anything
-The target price is the price you want to get notified .For example the product is 90 Euros and when it is 70 Euros you want to be notified.Just write 70 to the target price.It is pretty straight forward actually.
+paste this link when it is asked.The target price is the price you want to get notified.It is pretty straight forward actually.
 
 
 
